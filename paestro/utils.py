@@ -2,12 +2,16 @@ import pytz
 import random
 import string
 from datetime import datetime, timedelta
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from PIL import Image
 from io import BytesIO
 import base64
 import gzip
 import io
+import ssl
+import socket
+import OpenSSL
+import json
 
 class Paestro:
     """Utility class with static methods for common operations."""
@@ -575,3 +579,91 @@ class Paestro:
             datetime: Datetime object.
         """
         return datetime.strptime(text, format)
+    
+    @staticmethod
+    def get_ssl_info(domain: str, max_tries: int = 3) -> Optional[Dict[str, Any]]:
+        """Retrieves SSL certificate information for a domain.
+
+        Connects to the domain on port 443, fetches the certificate and returns
+        a dictionary with subject, issuer, serial number, version, validity
+        dates and extensions. Keys are in snake_case. Returns None if all
+        attempts fail.
+
+        Args:
+            domain (str): Domain name to query (e.g. "example.com").
+            max_tries (int, optional): Maximum number of connection attempts.
+                Defaults to 3.
+
+        Returns:
+            Optional[Dict[str, Any]]: Certificate data (subject, issuer,
+                serial_number, version, valid_from, valid_to, plus extension
+                fields), or None if unable to retrieve the certificate.
+        """
+        def get_certificate(host: str, port: int = 443, timeout: int = 10) -> str:
+            context = ssl.create_default_context()
+            conn = socket.create_connection((host, port))
+            sock = context.wrap_socket(conn, server_hostname=host)
+            sock.settimeout(timeout)
+            try:
+                der_cert = sock.getpeercert(True)
+            finally:
+                sock.close()
+            return ssl.DER_cert_to_PEM_cert(der_cert)
+        
+        for i in range(max_tries):
+            try:
+                certificate = get_certificate(domain)
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
+                
+                result = {
+                    'subject': dict(x509.get_subject().get_components()),
+                    'issuer': dict(x509.get_issuer().get_components()),
+                    'serial_number': x509.get_serial_number(),
+                    'version': x509.get_version(),
+                    'valid_from': datetime.strptime(x509.get_notBefore().decode('utf-8'), '%Y%m%d%H%M%SZ'),
+                    'valid_to': datetime.strptime(x509.get_notAfter().decode('utf-8'), '%Y%m%d%H%M%SZ'),
+                }
+
+                extensions = (x509.get_extension(i) for i in range(x509.get_extension_count()))
+                extension_data = {e.get_short_name(): str(e) for e in extensions}
+                result.update(extension_data)
+
+
+                def convert_to_strings(data):
+                    if isinstance(data, bytes):
+                        return data.decode('utf-8')
+                    elif isinstance(data, dict):
+                        return dict(map(convert_to_strings, data.items()))
+                    elif isinstance(data, list):
+                        return list(map(convert_to_strings, data))
+                    elif isinstance(data, tuple):
+                        return tuple(map(convert_to_strings, data))
+                    else:
+                        return data
+
+                result = convert_to_strings(result)
+                result = json.dumps(result, default=str)
+                result = json.loads(result)
+                
+                result['valid_from'] = datetime.strptime(result['valid_from'], '%Y-%m-%d %H:%M:%S')
+                result['valid_to'] = datetime.strptime(result['valid_to'], '%Y-%m-%d %H:%M:%S')
+                
+                def camel_to_snake(camel_case_string):
+                    snake_case_string = ""
+                    for i, char in enumerate(camel_case_string):
+                        if i > 0 and char.isupper():
+                            snake_case_string += "_"
+                        snake_case_string += char
+                    return snake_case_string.lower()
+                
+                new_result = {}
+                for key, value in result.items():
+                    new_result[camel_to_snake(key)] = value
+                
+                return new_result
+            except Exception as e:
+                print(f'Error: {e}')
+                print(f'Attempt {i+1} of {max_tries}')
+                pass
+            
+        return None

@@ -1,0 +1,3 @@
+pytz>=2024.2
+pillow>=12.0.0
+pyOpenSSL>=25.0.0
