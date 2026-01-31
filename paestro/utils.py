@@ -8,6 +8,7 @@ from io import BytesIO
 import base64
 import gzip
 import io
+import os
 import ssl
 import socket
 import OpenSSL
@@ -686,3 +687,39 @@ class Paestro:
         }
         data = base64.b64encode(requests.get(url, headers=headers, timeout=120).content).decode("utf-8")
         return data
+    
+    @staticmethod
+    def listdir(path: str) -> List[str]:
+        """Lists the contents of a directory.
+
+        Args:
+            path (str): Path of the directory to be listed.
+
+        Returns:
+            List[str]: List of files and directories in the directory.
+        """
+        return os.listdir(path)
+    
+    @staticmethod
+    def base64_encode(data: bytes) -> str:
+        """Encodes data to base64.
+
+        Args:
+            data (bytes): Data to be encoded.
+
+        Returns:
+            str: Base64 encoded data.
+        """
+        return base64.b64encode(data.encode()).decode()
+    
+    @staticmethod
+    def base64_decode(base64_string: str) -> bytes:
+        """Decodes base64 data to bytes.
+
+        Args:
+            base64_string (str): Base64 encoded data.
+
+        Returns:
+            bytes: Decoded bytes.
+        """
+        return base64.b64decode(base64_string.encode())
