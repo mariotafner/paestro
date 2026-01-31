@@ -12,6 +12,7 @@ import ssl
 import socket
 import OpenSSL
 import json
+import requests
 
 class Paestro:
     """Utility class with static methods for common operations."""
@@ -667,3 +668,21 @@ class Paestro:
                 pass
             
         return None
+    
+    @staticmethod
+    def get_url_base64(url: str) -> str:
+        """Gets the base64 encoded content of a URL.
+
+        Args:
+            url (str): URL to be fetched.
+
+        Returns:
+            str: Base64 encoded content of the URL.
+        """
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+                (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        }
+        data = base64.b64encode(requests.get(url, headers=headers, timeout=120).content).decode("utf-8")
+        return data
