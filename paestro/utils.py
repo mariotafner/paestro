@@ -562,3 +562,16 @@ class Paestro:
             decompressed_bytes = f.read()
 
         return decompressed_bytes
+    
+    @staticmethod
+    def string_to_datetime(text: str, format: str = '%Y-%m-%dT%H:%M:%S.%fZ') -> datetime:
+        """Converts a string to a datetime object.
+
+        Args:
+            text (str): String to be converted.
+            format (str, optional): Format of the string. Defaults to '%Y-%m-%dT%H:%M:%S.%fZ'.
+
+        Returns:
+            datetime: Datetime object.
+        """
+        return datetime.strptime(text, format)
