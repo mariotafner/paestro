@@ -2,6 +2,7 @@ import pytz
 import random
 import string
 from datetime import datetime, timedelta
+from typing import Any, List, Optional, Union
 from PIL import Image
 from io import BytesIO
 import base64
@@ -10,46 +11,45 @@ import io
 
 class Paestro:
     """Utility class with static methods for common operations."""
-    
+
     @staticmethod
-    def test():
+    def test() -> None:
         """Prints 'paestro' to the console. Test method."""
         print("paestro")
-        
+
     @staticmethod
-    def random_id():
-        """
-        Generates a random hexadecimal ID of 16 characters.
-        
+    def random_id() -> str:
+        """Generates a random hexadecimal ID of 16 characters.
+
         Returns:
             str: String with 16 random hexadecimal characters.
         """
         return ''.join(random.choices('abcdef0123456789', k=16))
 
     @staticmethod
-    def random_string(length: int, chars: str = (string.ascii_letters + string.digits)):
-        """
-        Generates a random string with the specified length.
-        
+    def random_string(
+        length: int, chars: str = (string.ascii_letters + string.digits)
+    ) -> str:
+        """Generates a random string with the specified length.
+
         Args:
             length (int): Length of the string to be generated.
-            chars (str, optional): Characters to be used in generation. 
-                                  Default: uppercase letters, lowercase letters and digits.
-        
+            chars (str, optional): Characters to be used in generation. Defaults to
+                uppercase letters, lowercase letters and digits.
+
         Returns:
             str: Random string with the specified length.
         """
         return ''.join(random.choices(chars, k=length))
 
     @staticmethod
-    def datetime(custom_tz=None):
-        """
-        Returns the current date and time.
-        
+    def datetime(custom_tz: Optional[int] = None) -> datetime:
+        """Returns the current date and time.
+
         Args:
-            custom_tz (int, optional): Timezone offset in hours. 
-                                      If None, uses São Paulo timezone.
-        
+            custom_tz (int, optional): Timezone offset in hours. If None, uses
+                São Paulo timezone.
+
         Returns:
             datetime: Datetime object with the current date and time.
         """
@@ -62,17 +62,16 @@ class Paestro:
             return datetime.now(tz)
         
     @staticmethod
-    def dateCompare(date1, date2):
-        """
-        Compares two dates and returns the comparison result.
-        
+    def dateCompare(date1: datetime, date2: datetime) -> int:
+        """Compares two dates and returns the comparison result.
+
         Args:
             date1 (datetime): First date to be compared.
             date2 (datetime): Second date to be compared.
-        
+
         Returns:
             int: 1 if date1 > date2, -1 if date1 < date2, 0 if date1 == date2.
-        
+
         Raises:
             TypeError: If date1 or date2 are not datetime objects.
         """
@@ -86,18 +85,17 @@ class Paestro:
             return 0
 
     @staticmethod
-    def unitToSeconds(value, unit):
-        """
-        Converts a value from a time unit to seconds.
-        
+    def unitToSeconds(value: Union[int, float], unit: str) -> Union[int, float]:
+        """Converts a value from a time unit to seconds.
+
         Args:
-            value (int|float): Value to be converted.
-            unit (str): Time unit. Options: 'seconds', 'minutes', 'hours', 
-                       'days', 'weeks', 'months', 'years'.
-        
+            value (int | float): Value to be converted.
+            unit (str): Time unit. One of: 'seconds', 'minutes', 'hours',
+                'days', 'weeks', 'months', 'years'.
+
         Returns:
-            int|float: Value converted to seconds.
-        
+            int | float: Value converted to seconds.
+
         Raises:
             ValueError: If the unit is not one of the valid options.
         """
@@ -119,18 +117,17 @@ class Paestro:
             raise ValueError("unit must be seconds, minutes, hours, days, weeks, months or years")
         
     @staticmethod
-    def secondsToUnit(seconds, unit):
-        """
-        Converts a value in seconds to another time unit.
-        
+    def secondsToUnit(seconds: Union[int, float], unit: str) -> float:
+        """Converts a value in seconds to another time unit.
+
         Args:
-            seconds (int|float): Value in seconds to be converted.
-            unit (str): Target time unit. Options: 'seconds', 'minutes', 
-                       'hours', 'days', 'weeks', 'months', 'years'.
-        
+            seconds (int | float): Value in seconds to be converted.
+            unit (str): Target time unit. One of: 'seconds', 'minutes',
+                'hours', 'days', 'weeks', 'months', 'years'.
+
         Returns:
             float: Value converted to the specified unit.
-        
+
         Raises:
             ValueError: If the unit is not one of the valid options.
         """
@@ -152,20 +149,21 @@ class Paestro:
             raise ValueError("unit must be seconds, minutes, hours, days, weeks, months or years")
         
     @staticmethod
-    def dateAdd(date, value, unit):
-        """
-        Adds a time value to a date.
-        
+    def dateAdd(
+        date: datetime, value: Union[int, float], unit: str
+    ) -> datetime:
+        """Adds a time value to a date.
+
         Args:
             date (datetime): Base date to add the value to.
-            value (int|float): Value to be added.
-            unit (str): Time unit. Options: 'seconds', 'minutes', 'hours', 
-                       'days', 'weeks', 'months', 'years', 'datetime'.
-                       If 'datetime', the value is treated as seconds directly.
-        
+            value (int | float): Value to be added.
+            unit (str): Time unit. One of: 'seconds', 'minutes', 'hours',
+                'days', 'weeks', 'months', 'years', 'datetime'. If 'datetime',
+                the value is treated as seconds directly.
+
         Returns:
             datetime: New date with the value added.
-        
+
         Raises:
             TypeError: If date is not a datetime object.
         """
@@ -177,17 +175,16 @@ class Paestro:
             return date + timedelta(seconds=Paestro.unitToSeconds(value, unit))
         
     @staticmethod
-    def secondsBetween(date1, date2):
-        """
-        Calculates the absolute difference in seconds between two dates.
-        
+    def secondsBetween(date1: datetime, date2: datetime) -> float:
+        """Calculates the absolute difference in seconds between two dates.
+
         Args:
             date1 (datetime): First date.
             date2 (datetime): Second date.
-        
+
         Returns:
             float: Absolute difference in seconds between the two dates.
-        
+
         Raises:
             TypeError: If date1 or date2 are not datetime objects.
         """
@@ -197,73 +194,68 @@ class Paestro:
         return abs((date2 - date1).total_seconds())
 
     @staticmethod
-    def dateToJsDate(date):
-        """
-        Converts a datetime object to JavaScript-compatible format (ISO string).
-        
+    def dateToJsDate(date: datetime) -> Optional[str]:
+        """Converts a datetime object to JavaScript-compatible format (ISO string).
+
         Args:
             date (datetime): Date to be converted.
-        
+
         Returns:
-            str|None: String in ISO format (with 'T' instead of space) or None 
-                     if date is not a datetime object.
+            str | None: String in ISO format (with 'T' instead of space), or
+                None if date is not a datetime object.
         """
         if not isinstance(date, datetime):
             return None
         return str(date).replace(' ', 'T')
 
     @staticmethod
-    def fill_zeros(value, length):
-        """
-        Pads a value with leading zeros until it reaches the specified length.
-        
+    def fill_zeros(value: Union[int, str], length: int) -> str:
+        """Pads a value with leading zeros until it reaches the specified length.
+
         Args:
-            value: Value to be padded (will be converted to string).
+            value (int | str): Value to be padded. Will be converted to string.
             length (int): Desired length of the resulting string.
-        
+
         Returns:
             str: String padded with leading zeros.
         """
         return str(value).zfill(length)
 
     @staticmethod
-    def randomize_list(list):
-        """
-        Randomly shuffles the elements of a list (modifies the original list).
-        
+    def randomize_list(items: List[Any]) -> List[Any]:
+        """Randomly shuffles the elements of a list in place.
+
         Args:
-            list (list): List to be shuffled.
-        
+            items (list): List to be shuffled. Modified in place.
+
         Returns:
             list: The same list (shuffled) passed as parameter.
         """
-        random.shuffle(list)
-        return list
+        random.shuffle(items)
+        return items
 
     @staticmethod
-    def random_int(min, max):
-        """
-        Generates a random integer within a range.
-        
+    def random_int(min_val: int, max_val: int) -> int:
+        """Generates a random integer within a range.
+
         Args:
-            min (int): Minimum value (inclusive).
-            max (int): Maximum value (inclusive).
-        
+            min_val (int): Minimum value (inclusive).
+            max_val (int): Maximum value (inclusive).
+
         Returns:
-            int: Random integer between min and max (inclusive).
+            int: Random integer between min_val and max_val (inclusive).
         """
-        return random.randint(min, max)
+        return random.randint(min_val, max_val)
 
     @staticmethod
-    def seconds_to_duration(seconds):
-        """
-        Converts a value in seconds to a human-readable duration string in Portuguese.
-        
+    def seconds_to_duration(seconds: Union[int, float]) -> str:
+        """Converts seconds to a human-readable duration string in Portuguese.
+
         Args:
-            seconds (int|float): Value in seconds to be converted.
-        
+            seconds (int | float): Value in seconds to be converted.
+
         Returns:
-            str: Formatted string with the duration (e.g., "2 dias, 3 horas e 15 minutos").
+            str: Formatted string (e.g., "2 dias, 3 horas e 15 minutos").
         """
         units = [
             (24 * 3600, "dia"),
@@ -283,97 +275,92 @@ class Paestro:
             return result[0]
         
     @staticmethod
-    def split_chunks(array, chunk_size=1):
-        """
-        Splits a list or string into chunks of the specified size.
-        
+    def split_chunks(
+        array: Union[List[Any], str], chunk_size: int = 1
+    ) -> List[Any]:
+        """Splits a list or string into chunks of the specified size.
+
         Args:
-            array (list|str): List or string to be split.
-            chunk_size (int, optional): Size of each chunk. Default: 1.
-        
+            array (list | str): List or string to be split.
+            chunk_size (int, optional): Size of each chunk. Defaults to 1.
+
         Returns:
             list: List containing the chunks of the original array.
         """
         return [array[i:i+chunk_size] for i in range(0, len(array), chunk_size)]
 
     @staticmethod
-    def random_choice(array):
-        """
-        Selects a random element from a list or string.
-        
+    def random_choice(array: Union[List[Any], str]) -> Any:
+        """Selects a random element from a list or string.
+
         Args:
-            array (list|str): List or string from which to select an element.
-        
+            array (list | str): List or string from which to select an element.
+
         Returns:
-            Random element from the array.
+            Any: Random element from the array.
         """
         return random.choice(array)
 
     @staticmethod
-    def string_pad_left(string, length, char=' '):
-        """
-        Pads a string to the left with a character until it reaches the specified length.
-        
+    def string_pad_left(text: str, length: int, char: str = ' ') -> str:
+        """Pads a string on the left until it reaches the specified length.
+
         Args:
-            string (str): String to be padded.
+            text (str): String to be padded.
             length (int): Desired length of the resulting string.
-            char (str, optional): Character used for padding. Default: space (' ').
-        
+            char (str, optional): Character used for padding. Defaults to ' '.
+
         Returns:
             str: String padded to the left.
         """
-        return char * (length - len(string)) + string
+        return char * (length - len(text)) + text
 
     @staticmethod
-    def string_pad_right(string, length, char=' '):
-        """
-        Pads a string to the right with a character until it reaches the specified length.
-        
+    def string_pad_right(text: str, length: int, char: str = ' ') -> str:
+        """Pads a string on the right until it reaches the specified length.
+
         Args:
-            string (str): String to be padded.
+            text (str): String to be padded.
             length (int): Desired length of the resulting string.
-            char (str, optional): Character used for padding. Default: space (' ').
-        
+            char (str, optional): Character used for padding. Defaults to ' '.
+
         Returns:
             str: String padded to the right.
         """
-        return string + char * (length - len(string))
+        return text + char * (length - len(text))
 
     @staticmethod
-    def remove_duplicated_spaces(text):
-        """
-        Removes duplicated spaces from a text, keeping only one space between words.
-        
+    def remove_duplicated_spaces(text: str) -> str:
+        """Removes duplicated spaces, keeping only one space between words.
+
         Args:
             text (str): Text to be processed.
-        
+
         Returns:
             str: Text with duplicated spaces removed.
         """
         return ' '.join(text.split())
 
     @staticmethod
-    def date_weekday(date):
-        """
-        Returns the weekday of a date (1=Monday, 2=Tuesday, ..., 7=Sunday).
-        
+    def date_weekday(date: datetime) -> int:
+        """Returns the weekday of a date (1=Monday, 2=Tuesday, ..., 7=Sunday).
+
         Args:
             date (datetime): Date from which to get the weekday.
-        
+
         Returns:
             int: Weekday number (1-7, where 1 is Monday and 7 is Sunday).
         """
         return [1,2,3,4,5,6,0][date.weekday()]
 
     @staticmethod
-    def datetime_set_time(datetime, time):
-        """
-        Sets the time of a datetime object while keeping the date.
-        
+    def datetime_set_time(dt: datetime, time: str) -> datetime:
+        """Sets the time of a datetime object while keeping the date.
+
         Args:
-            datetime (datetime): Datetime object to be modified.
+            dt (datetime): Datetime object to be modified.
             time (str): Time string in 'HH:MM:SS' format.
-        
+
         Returns:
             datetime: New datetime object with the time set and microseconds zeroed.
         """
@@ -381,21 +368,22 @@ class Paestro:
         hours = int(hours)
         minutes = int(minutes)
         seconds = int(seconds)
-        return datetime.replace(hour=hours, minute=minutes, second=seconds, microsecond=0)
+        return dt.replace(hour=hours, minute=minutes, second=seconds, microsecond=0)
     
     @staticmethod
-    def msort(arr, key=None):
-        """
-        Sorts a list using the bubble sort algorithm.
-        
+    def msort(
+        arr: List[Any], key: Optional[Union[str, List[str]]] = None
+    ) -> List[Any]:
+        """Sorts a list in place using the bubble sort algorithm.
+
         Args:
-            arr (list): List to be sorted (will be modified).
-            key (str|list|None, optional): Key(s) for sorting if arr contains dictionaries.
-                                         If None, sorts elements directly.
-                                         If list, sorts by multiple keys in order.
-        
+            arr (list): List to be sorted. Modified in place.
+            key (str | list | None, optional): Key(s) for sorting if arr contains
+                dictionaries. If None, sorts elements directly. If list, sorts
+                by multiple keys in order.
+
         Returns:
-            list: The same sorted list (modified in-place).
+            list: The same sorted list (modified in place).
         """
         def compare(a, b):
             if key is None:
@@ -423,14 +411,15 @@ class Paestro:
                 return arr
             
     @staticmethod
-    def reduce_jpeg_quality(source_path, target_path, quality=100):
-        """
-        Reduces the quality of a JPEG image and saves it to a new file.
-        
+    def reduce_jpeg_quality(
+        source_path: str, target_path: str, quality: int = 100
+    ) -> None:
+        """Reduces the quality of a JPEG image and saves it to a new file.
+
         Args:
             source_path (str): Path of the source JPEG file.
             target_path (str): Path where to save the image with reduced quality.
-            quality (int, optional): Image quality (0-100). Default: 100.
+            quality (int, optional): Image quality (0-100). Defaults to 100.
         """
         im1 = Image.open(source_path)
         buffer = BytesIO()
@@ -439,13 +428,12 @@ class Paestro:
             handle.write(buffer.getvalue())
             
     @staticmethod
-    def file_to_base64(source_path):
-        """
-        Converts a file to base64 string.
-        
+    def file_to_base64(source_path: str) -> str:
+        """Converts a file to base64 string.
+
         Args:
             source_path (str): Path of the file to be converted.
-        
+
         Returns:
             str: Base64 string representing the file content.
         """
@@ -453,10 +441,9 @@ class Paestro:
             return base64.b64encode(image_file.read()).decode('utf-8')
         
     @staticmethod
-    def base64_to_file(base64_string, target_path):
-        """
-        Converts a base64 string to a file.
-        
+    def base64_to_file(base64_string: str, target_path: str) -> None:
+        """Converts a base64 string to a file.
+
         Args:
             base64_string (str): Base64 string to be decoded.
             target_path (str): Path where to save the decoded file.
@@ -465,40 +452,38 @@ class Paestro:
             image_file.write(base64.b64decode(base64_string))
             
     @staticmethod
-    def gzip_compress(string):
-        """
-        Compresses a string using gzip.
-        
+    def gzip_compress(text: str) -> bytes:
+        """Compresses a string using gzip.
+
         Args:
-            string (str): String to be compressed.
-        
+            text (str): String to be compressed.
+
         Returns:
             bytes: Compressed data in gzip format.
-        
+
         Raises:
             TypeError: If the input is not a string.
         """
-        if not isinstance(string, str):
+        if not isinstance(text, str):
             raise TypeError("Input needs to be a string")
 
         bytes_buffer = io.BytesIO()
         with gzip.GzipFile(fileobj=bytes_buffer, mode='wb') as f:
-            f.write(string.encode('utf-8'))
+            f.write(text.encode('utf-8'))
             
         compressed_bytes = bytes_buffer.getvalue()
         return compressed_bytes
     
     @staticmethod
-    def gzip_decompress(compressed_bytes):
-        """
-        Decompresses gzip data to string.
-        
+    def gzip_decompress(compressed_bytes: bytes) -> str:
+        """Decompresses gzip data to string.
+
         Args:
             compressed_bytes (bytes): Compressed data in gzip format.
-        
+
         Returns:
             str: Decompressed string.
-        
+
         Raises:
             TypeError: If the input is not bytes.
         """
@@ -511,10 +496,9 @@ class Paestro:
         return decompressed_string
     
     @staticmethod
-    def save_file_bytes(data, target_path):
-        """
-        Saves binary data to a file.
-        
+    def save_file_bytes(data: bytes, target_path: str) -> None:
+        """Saves binary data to a file.
+
         Args:
             data (bytes): Binary data to be saved.
             target_path (str): File path where to save the data.
@@ -523,13 +507,12 @@ class Paestro:
             file.write(data)
             
     @staticmethod
-    def read_file_bytes(source_path):
-        """
-        Reads the binary content of a file.
-        
+    def read_file_bytes(source_path: str) -> bytes:
+        """Reads the binary content of a file.
+
         Args:
             source_path (str): Path of the file to be read.
-        
+
         Returns:
             bytes: Binary content of the file.
         """
@@ -537,15 +520,17 @@ class Paestro:
             return file.read()
         
     @staticmethod
-    def gzip_compress_bytes(data):
-        """
-        Compresses binary data using gzip.
-        
+    def gzip_compress_bytes(data: bytes) -> bytes:
+        """Compresses binary data using gzip.
+
         Args:
             data (bytes): Binary data to be compressed.
-        
+
         Returns:
             bytes: Compressed data in gzip format.
+
+        Raises:
+            TypeError: If the input is not bytes.
         """
         if not isinstance(data, bytes):
             raise TypeError("Input needs to be bytes")
@@ -556,15 +541,17 @@ class Paestro:
         return bytes_buffer.getvalue()
     
     @staticmethod
-    def gzip_decompress_bytes(compressed_bytes):
-        """
-        Decompresses gzip data to binary data.
-        
+    def gzip_decompress_bytes(compressed_bytes: bytes) -> bytes:
+        """Decompresses gzip data to binary data.
+
         Args:
             compressed_bytes (bytes): Compressed data in gzip format.
-        
+
         Returns:
             bytes: Decompressed data.
+
+        Raises:
+            TypeError: If the input is not bytes.
         """
         if not isinstance(compressed_bytes, bytes):
             raise TypeError("Input needs to be bytes")

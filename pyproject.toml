@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paestro"
-version = "1.1.1"
+version = "1.2.0"
 authors = [
   { name="Mario Fabre", email="admin@mariofabre.dev" },
 ]
@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -25,3 +26,6 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/mariotafner/paestro"
+
+[tool.setuptools.package-data]
+paestro = ["py.typed"]
