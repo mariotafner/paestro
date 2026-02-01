@@ -745,10 +745,12 @@ class Paestro:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, username=username, password=password)
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cmd)
+        ssh_stdout_content = ssh_stdout.read()
+        ssh_stderr_content = ssh_stderr.read()
         ssh.close()
-        
-        ssh_stdout = str(ssh_stdout.read())
-        ssh_stderr = str(ssh_stderr.read())
+
+        ssh_stdout = str(ssh_stdout_content)
+        ssh_stderr = str(ssh_stderr_content)
         
         ssh_stdout = ssh_stdout.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
         ssh_stderr = ssh_stderr.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
