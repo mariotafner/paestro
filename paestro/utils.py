@@ -14,6 +14,8 @@ import socket
 import OpenSSL
 import json
 import requests
+import paramiko
+import time
 
 class Paestro:
     """Utility class with static methods for common operations."""
@@ -723,3 +725,54 @@ class Paestro:
             bytes: Decoded bytes.
         """
         return base64.b64decode(base64_string.encode())
+    
+    @staticmethod
+    def ssh_exec(cmd: str, host: str, username: str, password: str) -> Dict[str, Any]:
+        """Executes a command on a remote server.
+
+        Args:
+            cmd (str): Command to be executed.
+            host (str): Host of the remote server.
+            username (str): Username of the remote server.
+            password (str): Password of the remote server.
+
+        Returns:
+            Dict[str, Any]: Dictionary with the result of the command, the lines of the result and the delay in milliseconds.
+        """
+        start = time.time()
+
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host, username=username, password=password)
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cmd)
+        ssh.close()
+        
+        ssh_stdout = str(ssh_stdout.read())
+        ssh_stderr = str(ssh_stderr.read())
+        
+        ssh_stdout = ssh_stdout.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
+        ssh_stderr = ssh_stderr.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
+        
+        ssh_stdout = ssh_stdout[2:-1]
+        ssh_stderr = ssh_stderr[2:-1]
+        
+        result = ''
+        if ssh_stdout.replace('\n', '') != '':
+            result = ssh_stdout
+        elif ssh_stderr.replace('\n', '') != '':
+            result = ssh_stderr
+        
+        if (result.endswith('\n')):
+            result = result[:-1]
+            
+        lines = result.split('\n')
+        lines = list(filter(lambda x: x != '', lines))
+    
+        end = time.time()
+        ms = (end - start) * 1000
+        
+        return {
+            'result': result,
+            'lines': lines,
+            'delay': ms
+        }
