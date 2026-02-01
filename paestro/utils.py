@@ -727,7 +727,7 @@ class Paestro:
         return base64.b64decode(base64_string.encode())
     
     @staticmethod
-    def ssh_exec(cmd: str, host: str, username: str, password: str) -> Dict[str, Any]:
+    def ssh_exec(cmd: str, host: str, username: str, password: str) -> tuple[str, List[str], float]:
         """Executes a command on a remote server.
 
         Args:
@@ -737,7 +737,7 @@ class Paestro:
             password (str): Password of the remote server.
 
         Returns:
-            Dict[str, Any]: Dictionary with the result of the command, the lines of the result and the delay in milliseconds.
+            tuple[str, List[str], float]: (result, lines, delay in milliseconds)
         """
         start = time.time()
 
@@ -771,8 +771,4 @@ class Paestro:
         end = time.time()
         ms = (end - start) * 1000
         
-        return {
-            'result': result,
-            'lines': lines,
-            'delay': ms
-        }
+        return result, lines, ms
