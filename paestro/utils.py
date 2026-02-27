@@ -749,8 +749,8 @@ class Paestro:
         ssh_stderr_content = ssh_stderr.read()
         ssh.close()
 
-        ssh_stdout = str(ssh_stdout_content)
-        ssh_stderr = str(ssh_stderr_content)
+        ssh_stdout = ssh_stdout_content.decode('utf-8')
+        ssh_stderr = ssh_stderr_content.decode('utf-8')
         
         ssh_stdout = ssh_stdout.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
         ssh_stderr = ssh_stderr.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
