@@ -755,9 +755,6 @@ class Paestro:
         ssh_stdout = ssh_stdout.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
         ssh_stderr = ssh_stderr.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
         
-        ssh_stdout = ssh_stdout[2:-1]
-        ssh_stderr = ssh_stderr[2:-1]
-        
         result = ''
         if ssh_stdout.replace('\n', '') != '':
             result = ssh_stdout
