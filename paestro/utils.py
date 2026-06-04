@@ -771,3 +771,32 @@ class Paestro:
         ms = (end - start) * 1000
         
         return result, lines, ms
+    
+    @staticmethod
+    def ssh_send_file(localpath: str, remotepath: str, host: str, username: str, password: str) -> float:
+        """Sends a file to a remote server via SFTP.
+
+        Args:
+            localpath (str): Local path of the file to send.
+            remotepath (str): Remote destination path.
+            host (str): Host of the remote server.
+            username (str): Username of the remote server.
+            password (str): Password of the remote server.
+
+        Returns:
+            float: Delay in milliseconds.
+        """
+        start = time.time()
+
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host, username=username, password=password)
+        sftp = ssh.open_sftp()
+        sftp.put(localpath, remotepath)
+        sftp.close()
+        ssh.close()
+
+        end = time.time()
+        ms = (end - start) * 1000
+
+        return ms
