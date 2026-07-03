@@ -1,5 +1,6 @@
 import pytz
 import random
+import re
 import string
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
@@ -727,7 +728,7 @@ class Paestro:
         return base64.b64decode(base64_string.encode())
     
     @staticmethod
-    def ssh_exec(cmd: str, host: str, username: str, password: str) -> tuple[str, List[str], float]:
+    def ssh_exec(cmd: str, host: str, username: str, password: str, pty: bool = False) -> tuple[str, List[str], float]:
         """Executes a command on a remote server.
 
         Args:
@@ -735,6 +736,10 @@ class Paestro:
             host (str): Host of the remote server.
             username (str): Username of the remote server.
             password (str): Password of the remote server.
+            pty (bool, optional): Whether to allocate a pseudo-terminal for the
+                command. Required for interactive shells (e.g. "bash -ic") and
+                for programs that only emit ANSI color codes when attached to a
+                tty. Defaults to False.
 
         Returns:
             tuple[str, List[str], float]: (result, lines, delay in milliseconds)
@@ -744,7 +749,7 @@ class Paestro:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, username=username, password=password)
-        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cmd)
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cmd, get_pty=pty)
         ssh_stdout_content = ssh_stdout.read()
         ssh_stderr_content = ssh_stderr.read()
         ssh.close()
@@ -800,3 +805,115 @@ class Paestro:
         ms = (end - start) * 1000
 
         return ms
+
+    @staticmethod
+    def parse_ansi_modifiers(text_with_formats: str) -> tuple[str, List[Dict[str, Any]]]:
+        """Parses ANSI escape codes (e.g. colored SSH/terminal output) out of a string.
+
+        Args:
+            text_with_formats (str): Text containing ANSI SGR escape sequences
+                (e.g. "\\x1b[01;34m").
+
+        Returns:
+            tuple[str, List[Dict[str, Any]]]: (plain_text, formats), where
+                plain_text has all escape sequences stripped, and formats is a
+                list of dicts with 'start', 'end' (offsets into plain_text) and
+                'format' (a dict describing the modifiers, e.g. {'bold': True,
+                'text': 'blue'}, or {} for unformatted segments).
+        """
+        def fill_format_gaps(plain_text, formats):
+            filled = []
+            pos = 0
+            for f in formats:
+                if f['start'] > pos:
+                    filled.append({'start': pos, 'end': f['start'], 'format': None})
+                filled.append(f)
+                pos = f['end']
+            if pos < len(plain_text):
+                filled.append({'start': pos, 'end': len(plain_text), 'format': None})
+            return filled
+
+        def parse_format(format_code):
+            format_obj = {}
+            if format_code is None:
+                return format_obj
+            modifiers = {
+                "0": {},
+                "1": {"bold": True},
+                "2": {"dim": True},
+                "3": {"italic": True},
+                "4": {"undeline": True},
+                "7": {"reverse": True},
+                "8": {"invisible": True},
+                "9": {"strikethrough": True},
+            }
+            colors = {
+                "0": "black",
+                "1": "red",
+                "2": "green",
+                "3": "yellow",
+                "4": "blue",
+                "5": "magenta",
+                "6": "cyan",
+                "7": "white"
+            }
+            text_color_prefix = "3"
+            bg_color_prefix = "4"
+            dark_text_color_prefix = "9"
+            dark_bg_color_prefix = "10"
+
+            for item in format_code.split(";"):
+                item = item.lstrip("0") or "0"
+                if item in modifiers:
+                    format_obj = format_obj | modifiers[item]
+                elif item.startswith(text_color_prefix) and len(item) >= 2:
+                    format_obj = format_obj | {"text": colors[item[len(text_color_prefix):]]}
+                elif item.startswith(bg_color_prefix) and len(item) >= 2:
+                    format_obj = format_obj | {"bg": colors[item[len(bg_color_prefix):]]}
+                elif item.startswith(dark_text_color_prefix) and len(item) >= 2:
+                    format_obj = format_obj | {"text": "dark " + colors[item[len(dark_text_color_prefix):]]}
+                elif item.startswith(dark_bg_color_prefix) and len(item) >= 3:
+                    format_obj = format_obj | {"bg": "dark " + colors[item[len(dark_bg_color_prefix):]]}
+
+            return format_obj
+
+        ansi_re = re.compile(r'\x1b\[([0-9;]*)m')
+        plain = []
+        formats = []
+        pos = 0
+        cur_format = None
+        cur_start = None
+        last_end = 0
+
+        for match in ansi_re.finditer(text_with_formats):
+            text = text_with_formats[last_end:match.start()]
+            plain.append(text)
+            pos += len(text)
+
+            code = match.group(1)
+            is_reset = code in ('', '0', '00')
+
+            if cur_format is not None:
+                formats.append({'start': cur_start, 'end': pos, 'format': cur_format})
+                cur_format = None
+
+            if not is_reset:
+                cur_format = code
+                cur_start = pos
+
+            last_end = match.end()
+
+        tail = text_with_formats[last_end:]
+        plain.append(tail)
+        pos += len(tail)
+
+        if cur_format is not None:
+            formats.append({'start': cur_start, 'end': pos, 'format': cur_format})
+
+        plain_text = ''.join(plain)
+
+        formats = fill_format_gaps(plain_text, formats)
+        for i in range(len(formats)):
+            formats[i]["format"] = parse_format(formats[i]["format"])
+
+        return plain_text, formats
