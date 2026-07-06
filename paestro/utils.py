@@ -807,12 +807,16 @@ class Paestro:
         return ms
 
     @staticmethod
-    def parse_ansi_modifiers(text_with_formats: str) -> tuple[str, List[Dict[str, Any]]]:
+    def parse_ansi_modifiers(text_with_formats: str, ignore_extended_colors: bool = True) -> tuple[str, List[Dict[str, Any]]]:
         """Parses ANSI escape codes (e.g. colored SSH/terminal output) out of a string.
 
         Args:
             text_with_formats (str): Text containing ANSI SGR escape sequences
                 (e.g. "\\x1b[01;34m").
+            ignore_extended_colors (bool): When True (default), 256-color and
+                truecolor sequences (38/48;5;n and 38/48;2;r;g;b) are consumed but
+                not emitted as styling. When False, they produce "color256(n)" and
+                "rgb(r,g,b)" values.
 
         Returns:
             tuple[str, List[Dict[str, Any]]]: (plain_text, formats), where
@@ -857,23 +861,42 @@ class Paestro:
                 "6": "cyan",
                 "7": "white"
             }
-            text_color_prefix = "3"
-            bg_color_prefix = "4"
-            dark_text_color_prefix = "9"
-            dark_bg_color_prefix = "10"
+            items = format_code.split(";")
+            i = 0
+            while i < len(items):
+                item = items[i].lstrip("0") or "0"
 
-            for item in format_code.split(";"):
-                item = item.lstrip("0") or "0"
+                # Extended color: 38/48 followed by 5;n (256-color) or 2;r;g;b (truecolor)
+                if item in ("38", "48"):
+                    key = "text" if item == "38" else "bg"
+                    mode = items[i + 1] if i + 1 < len(items) else None
+                    if mode == "5" and i + 2 < len(items):
+                        if not ignore_extended_colors:
+                            format_obj = format_obj | {key: "color256(" + items[i + 2] + ")"}
+                        i += 3
+                    elif mode == "2" and i + 4 < len(items):
+                        if not ignore_extended_colors:
+                            rgb = ",".join(items[i + 2:i + 5])
+                            format_obj = format_obj | {key: "rgb(" + rgb + ")"}
+                        i += 5
+                    else:
+                        i += 1
+                    continue
+
                 if item in modifiers:
                     format_obj = format_obj | modifiers[item]
-                elif item.startswith(text_color_prefix) and len(item) >= 2:
-                    format_obj = format_obj | {"text": colors[item[len(text_color_prefix):]]}
-                elif item.startswith(bg_color_prefix) and len(item) >= 2:
-                    format_obj = format_obj | {"bg": colors[item[len(bg_color_prefix):]]}
-                elif item.startswith(dark_text_color_prefix) and len(item) >= 2:
-                    format_obj = format_obj | {"text": "dark " + colors[item[len(dark_text_color_prefix):]]}
-                elif item.startswith(dark_bg_color_prefix) and len(item) >= 3:
-                    format_obj = format_obj | {"bg": "dark " + colors[item[len(dark_bg_color_prefix):]]}
+                elif item in ("39", "49"):
+                    pass  # default foreground/background — no styling
+                elif len(item) == 2 and item[0] == "3" and item[1] in colors:
+                    format_obj = format_obj | {"text": colors[item[1]]}
+                elif len(item) == 2 and item[0] == "4" and item[1] in colors:
+                    format_obj = format_obj | {"bg": colors[item[1]]}
+                elif len(item) == 2 and item[0] == "9" and item[1] in colors:
+                    format_obj = format_obj | {"text": "dark " + colors[item[1]]}
+                elif len(item) == 3 and item[:2] == "10" and item[2] in colors:
+                    format_obj = format_obj | {"bg": "dark " + colors[item[2]]}
+
+                i += 1
 
             return format_obj
 
