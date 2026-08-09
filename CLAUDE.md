@@ -34,8 +34,15 @@ Method categories in `Paestro`:
 - **Strings/Random**: `random_id`, `random_string`, `random_int`, `random_choice`, `randomize_list`, `fill_zeros`, `split_chunks`, `string_pad_left`, `string_pad_right`, `remove_duplicated_spaces`, `msort`
 - **File/Binary**: `file_to_base64`, `base64_to_file`, `base64_encode`, `base64_decode`, `gzip_compress`, `gzip_decompress`, `gzip_compress_bytes`, `gzip_decompress_bytes`, `save_file_bytes`, `read_file_bytes`, `listdir`, `reduce_jpeg_quality`
 - **Network**: `get_ssl_info`, `get_url_base64`, `ssh_exec`, `ssh_send_file`, `ping`
+- **Terminal/Debug**: `parse_ansi_modifiers`, `dump_exception`, `test`
 
 `ssh_exec` returns `(result: str, lines: List[str], ms: float)` — stdout is preferred over stderr; trailing newline and blank lines are stripped.
+
+`ping` shells out to the system `ping` binary via `subprocess.run` (argument list, no shell) and returns a dict with `timings` (ms floats), `packets_transmitted`, `packets_received`, `packet_loss` (0–100) and the raw `output`.
+
+`parse_ansi_modifiers` returns `(plain_text: str, formats: List[dict])`, where each format entry is `{'start', 'end', 'format'}` over the plain-text offsets.
+
+`dump_exception` returns a multi-line debug dump of an exception (type, args, traceback, cause, context, notes and public non-callable attributes).
 
 `seconds_to_duration` returns Portuguese-language strings (e.g., `"2 dias e 3 horas"`).
 

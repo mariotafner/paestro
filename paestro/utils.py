@@ -995,3 +995,44 @@ class Paestro:
             'packet_loss': packet_loss,
             'output': output,
         }
+
+    @staticmethod
+    def dump_exception(e: BaseException) -> str:
+        """Builds a detailed textual dump of an exception.
+
+        Includes the type, string and repr representations, args, traceback,
+        cause, context, suppression flag, notes and every non-callable public
+        attribute of the exception.
+
+        Args:
+            e (BaseException): Exception to be inspected.
+
+        Returns:
+            str: Multi-line string with the exception details, delimited by
+                lines of dashes.
+        """
+        lines = []
+        lines.append('-' * 60)
+        lines.append(f'type            : {type(e).__name__}')
+        lines.append(f'str(e)          : {e}')
+        lines.append(f'repr(e)         : {e!r}')
+        lines.append(f'args            : {e.args}')
+        lines.append(f'__traceback__   : {e.__traceback__}')
+        lines.append(f'__cause__       : {e.__cause__!r}')
+        lines.append(f'__context__     : {e.__context__!r}')
+        lines.append(f'__suppress_ctx__: {e.__suppress_context__}')
+        lines.append(f'__notes__       : {getattr(e, "__notes__", [])}')
+        attrs = {}
+        for a in dir(e):
+            if a.startswith('_') or a == 'args':
+                continue
+            try:
+                v = getattr(e, a)
+            except AttributeError:
+                continue
+            if not callable(v):
+                attrs[a] = v
+        for name, value in attrs.items():
+            lines.append(f'  {name:<14}: {value!r}')
+        lines.append('-' * 60)
+        return '\n'.join(lines)
