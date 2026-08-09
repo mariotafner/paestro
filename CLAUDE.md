@@ -33,7 +33,7 @@ Method categories in `Paestro`:
 - **DateTime**: `datetime`, `dateCompare`, `dateAdd`, `secondsBetween`, `dateToJsDate`, `date_weekday`, `datetime_set_time`, `string_to_datetime`, `unitToSeconds`, `secondsToUnit`, `seconds_to_duration`
 - **Strings/Random**: `random_id`, `random_string`, `random_int`, `random_choice`, `randomize_list`, `fill_zeros`, `split_chunks`, `string_pad_left`, `string_pad_right`, `remove_duplicated_spaces`, `msort`
 - **File/Binary**: `file_to_base64`, `base64_to_file`, `base64_encode`, `base64_decode`, `gzip_compress`, `gzip_decompress`, `gzip_compress_bytes`, `gzip_decompress_bytes`, `save_file_bytes`, `read_file_bytes`, `listdir`, `reduce_jpeg_quality`
-- **Network**: `get_ssl_info`, `get_url_base64`, `ssh_exec`, `ssh_send_file`
+- **Network**: `get_ssl_info`, `get_url_base64`, `ssh_exec`, `ssh_send_file`, `ping`
 
 `ssh_exec` returns `(result: str, lines: List[str], ms: float)` — stdout is preferred over stderr; trailing newline and blank lines are stripped.
 

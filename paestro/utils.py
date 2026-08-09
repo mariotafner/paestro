@@ -12,6 +12,7 @@ import io
 import os
 import ssl
 import socket
+import subprocess
 import OpenSSL
 import json
 import requests
@@ -940,3 +941,57 @@ class Paestro:
             formats[i]["format"] = parse_format(formats[i]["format"])
 
         return plain_text, formats
+    
+    @staticmethod
+    def ping(target: str, count: int = 4, timeout: Optional[float] = None) -> Dict[str, Any]:
+        """Pings a host and parses the round-trip timings and packet counts.
+
+        Args:
+            target (str): Host or IP address to ping.
+            count (int, optional): Number of packets to send. Defaults to 4.
+            timeout (float, optional): Maximum time in seconds to wait for the
+                ping command. Defaults to None (no timeout).
+
+        Returns:
+            Dict[str, Any]: Dictionary with the keys:
+                timings (List[float]): Round-trip time in milliseconds of each
+                    reply received.
+                packets_transmitted (int): Number of packets sent.
+                packets_received (int): Number of replies received.
+                packet_loss (float): Percentage of packets lost (0-100).
+                output (str): Raw output of the ping command.
+        """
+        try:
+            process = subprocess.run(
+                ['ping', '-c', str(count), target],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+            output = process.stdout + process.stderr
+        except subprocess.TimeoutExpired as error:
+            output = ''
+            for stream in (error.stdout, error.stderr):
+                if stream:
+                    output += stream if isinstance(stream, str) else stream.decode('utf-8', 'replace')
+
+        timings = [float(value) for value in re.findall(r'time[=<]\s*([0-9.]+)\s*ms', output)]
+
+        packets_transmitted = 0
+        packets_received = 0
+        summary = re.search(r'(\d+)\s+packets transmitted,\s*(\d+)', output)
+        if summary:
+            packets_transmitted = int(summary.group(1))
+            packets_received = int(summary.group(2))
+
+        packet_loss = 100.0
+        if packets_transmitted > 0:
+            packet_loss = (packets_transmitted - packets_received) / packets_transmitted * 100
+
+        return {
+            'timings': timings,
+            'packets_transmitted': packets_transmitted,
+            'packets_received': packets_received,
+            'packet_loss': packet_loss,
+            'output': output,
+        }
